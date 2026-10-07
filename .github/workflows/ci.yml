@@ -1,8 +1,12 @@
 #Test CI workflow
 name: "Test CI Workflow"
+
 on: push
+
 jobs: 
  code:
+   runs-on: ubuntu-latest
+   
    steps:
      - name: code checkout
        run: echo "Code Checkout"
