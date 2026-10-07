@@ -1,12 +1,18 @@
 #Test CI workflow
 name: "Test CI Workflow"
 
-on: push
+on: 
+ push:
+ pull_request: 
+  branches: [main]
 
 jobs: 
- code:
+ build:
    runs-on: ubuntu-latest
    
    steps:
      - name: code checkout
-       run: echo "Code Checkout"
+       uses: action/checkout@v4
+
+     - name: List files
+       run: ls -la
