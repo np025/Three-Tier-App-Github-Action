@@ -1,0 +1,71 @@
+name: CD
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: What to deploy to Azure Container Apps
+        required: true
+        type: choice
+        options:
+          - frontend
+          - backend
+          - both
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  ACR_NAME: ${{ secrets.ACR_NAME }}
+  RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
+
+jobs:
+  deploy:
+    name: Build and deploy ${{ inputs.target }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Log in to Azure Container Registry
+        run: az acr login --name "$ACR_NAME"
+
+      - name: Build and push frontend image
+        if: inputs.target == 'frontend' || inputs.target == 'both'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./Frontend
+          push: true
+          tags: ${{ env.ACR_NAME }}.azurecr.io/frontend:${{ github.sha }}
+
+      - name: Deploy frontend
+        if: inputs.target == 'frontend' || inputs.target == 'both'
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          resourceGroup: ${{ env.RESOURCE_GROUP }}
+          containerAppName: ${{ secrets.CONTAINER_APP_NAME }}
+          imageToDeploy: ${{ env.ACR_NAME }}.azurecr.io/frontend:${{ github.sha }}
+
+      - name: Build and push backend image
+        if: inputs.target == 'backend' || inputs.target == 'both'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./Backend
+          push: true
+          tags: ${{ env.ACR_NAME }}.azurecr.io/backend:${{ github.sha }}
+
+      - name: Deploy backend
+        if: inputs.target == 'backend' || inputs.target == 'both'
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          resourceGroup: ${{ env.RESOURCE_GROUP }}
+          containerAppName: ${{ secrets.CONTAINER_BACKENDAPP_NAME }}
+          imageToDeploy: ${{ env.ACR_NAME }}.azurecr.io/backend:${{ github.sha }}
