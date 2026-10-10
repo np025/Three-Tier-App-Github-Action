@@ -40,9 +40,32 @@ jobs:
   backend:
     name: Backend checks
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: auth_api
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d auth_api"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     defaults:
       run:
         working-directory: Backend
+    env:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: auth_api
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      JWT_SECRET_KEY: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+      EX_API: https://example.invalid
+      CORS_URL: http://localhost:3000
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
