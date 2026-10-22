@@ -18,3 +18,24 @@ spec:
           image: nginx:stable
           ports:
             - containerPort: 8080
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          envFrom:
+            - secretRef:
+                name: backend-secrets
+          env:
+            - name: DB_HOST
+              value: "pg-three-tier-nikita.postgres.database.azure.com"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              value: "authdb"
+            - name: DB_USER
+              value: "pgadmin"
+            - name: CORS_URL
+              value: ""
