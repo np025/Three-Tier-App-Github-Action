@@ -102,19 +102,6 @@ jobs:
             --from-env-file="$secret_file" \
             --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Deploy frontend
-        if: inputs.target == 'frontend' || inputs.target == 'both'
-        run: |
-          kubectl apply -f k8s/frontend-deployment.yaml && \
-          kubectl set image deployment/frontend \
-            frontend=$ACR_LOGIN_SERVER/frontend:$IMAGE_TAG \
-            -n "$K8S_NAMESPACE"
-
-          kubectl apply -f k8s/frontend-service.yaml
-
-          kubectl rollout status deployment/frontend \
-            -n "$K8S_NAMESPACE" --timeout=180s
-
       - name: Deploy backend
         if: inputs.target == 'backend' || inputs.target == 'both'
         run: |
@@ -126,6 +113,19 @@ jobs:
           kubectl apply -f k8s/backend-service.yaml
 
           kubectl rollout status deployment/backend \
+            -n "$K8S_NAMESPACE" --timeout=180s
+
+      - name: Deploy frontend
+        if: inputs.target == 'frontend' || inputs.target == 'both'
+        run: |
+          kubectl apply -f k8s/frontend-deployment.yaml && \
+          kubectl set image deployment/frontend \
+            frontend=$ACR_LOGIN_SERVER/frontend:$IMAGE_TAG \
+            -n "$K8S_NAMESPACE"
+
+          kubectl apply -f k8s/frontend-service.yaml
+
+          kubectl rollout status deployment/frontend \
             -n "$K8S_NAMESPACE" --timeout=180s
 
       - name: Verify deployment
