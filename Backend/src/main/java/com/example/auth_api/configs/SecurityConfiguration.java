@@ -74,7 +74,9 @@ public class SecurityConfiguration {
         // Register both configurations
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/actuator/**", actuatorCorsConfiguration);
-        source.registerCorsConfiguration("/**", apiCorsConfiguration);  // Default CORS configuration for other endpoints
+        if (corsUrl != null && !corsUrl.isBlank()) {
+            source.registerCorsConfiguration("/**", apiCorsConfiguration);
+        }
 
         return source;
     }
